@@ -1,69 +1,41 @@
+// components/TodoList.tsx
 "use client";
 
 import { useState } from "react";
-import { TodoItemDto } from "@/src/types/todo";
-import { todoApi } from "@/src/lib/api";
+import { Todo } from "@/src/types/todo";
 import TodoItem from "./TodoItem";
-import TodoForm from "./TodoForm";
 import ConfirmModal from "./ConfirmModal";
 
-interface Props {
-  initialTodos: TodoItemDto[];
+interface TodoListProps {
+  todos: Todo[];
+  loading: boolean;
+  error: string | null;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => Promise<void>;
+  onRetry: () => void;
 }
 
-export default function TodoList({ initialTodos }: Props) {
-  const [todos, setTodos] = useState<TodoItemDto[]>(initialTodos);
-  const [editingTodo, setEditingTodo] = useState<TodoItemDto | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+export default function TodoList({
+  todos,
+  loading,
+  error,
+  onToggle,
+  onDelete,
+  onRetry,
+}: TodoListProps) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [todoToDelete, setTodoToDelete] = useState<TodoItemDto | null>(null);
-  const handleCreate = async (data: {
-    title: string;
-    description?: string;
-  }) => {
-    try {
-      const { id } = await todoApi.create(data);
-      const newTodo = await todoApi.getById(id);
-      setTodos([...todos, newTodo]);
-      setIsFormOpen(false);
-    } catch (error) {
-      console.error("Failed to create todo:", error);
-      alert("Error creating todo. Check console for details.");
-    }
-  };
+  const [todoToDelete, setTodoToDelete] = useState<Todo | null>(null);
 
-  const handleUpdate = async (
-    id: string,
-    data: { title: string; description?: string; isComplete: boolean },
-  ) => {
-    try {
-      const updated = await todoApi.update(id, data);
-      setTodos(todos.map((t) => (t.id === id ? updated : t)));
-      setEditingTodo(null);
-      setIsFormOpen(false);
-    } catch (error) {
-      console.error("Failed to update todo:", error);
-      alert("Error updating todo.");
-    }
-  };
-
-  const handleDeleteClick = (todo: TodoItemDto) => {
+  const handleDeleteClick = (todo: Todo) => {
     setTodoToDelete(todo);
     setDeleteModalOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
     if (!todoToDelete) return;
-
-    try {
-      await todoApi.delete(todoToDelete.id);
-      setTodos(todos.filter((t) => t.id !== todoToDelete.id));
-      setDeleteModalOpen(false);
-      setTodoToDelete(null);
-    } catch (error) {
-      console.error("Failed to delete todo:", error);
-      alert("Error deleting todo.");
-    }
+    await onDelete(todoToDelete.id);
+    setDeleteModalOpen(false);
+    setTodoToDelete(null);
   };
 
   const handleDeleteCancel = () => {
@@ -71,74 +43,64 @@ export default function TodoList({ initialTodos }: Props) {
     setTodoToDelete(null);
   };
 
-  const handleToggleComplete = (todo: TodoItemDto) => {
-    todoApi
-      .updatePartial(todo.id, { isComplete: !todo.isComplete })
-      .then((updated) => {
-        setTodos(todos.map((t) => (t.id === updated.id ? updated : t)));
-      });
-  };
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-cyan-500/20 rounded-full" />
+          <div className="absolute inset-0 border-4 border-transparent border-t-cyan-400 rounded-full animate-spin" />
+        </div>
+        <p className="text-gray-400 mt-4">Loading your tasks from the cosmos...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-16">
+        <div className="text-6xl mb-4">💔</div>
+        <p className="text-red-400 mb-4">{error}</p>
+        <button
+          onClick={onRetry}
+          className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-xl text-white font-semibold 
+                     hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 neon-glow-cyan"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  if (todos.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <div className="text-6xl mb-4">🌠</div>
+        <p className="text-gray-400 text-lg mb-2">No tasks yet!</p>
+        <p className="text-gray-500">Add your first task to start exploring the galaxy</p>
+      </div>
+    );
+  }
 
   return (
-    <div>
+    <>
       <ConfirmModal
         isOpen={deleteModalOpen}
-        title="Delete Todo"
+        title="Delete Task"
         message={`Are you sure you want to delete "${todoToDelete?.title}"? This action cannot be undone.`}
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />
-      <div className="mb-6">
-        <button
-          onClick={() => {
-            setEditingTodo(null);
-            setIsFormOpen(true);
-          }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-        >
-          + Add New Todo
-        </button>
-      </div>
 
-      {isFormOpen && (
-        <div className="mb-6 p-4 border rounded-lg bg-gray-50 shadow-sm">
-          <TodoForm
-            initialData={editingTodo || undefined}
-            onSubmit={(data) => {
-              if (editingTodo) {
-                handleUpdate(editingTodo.id, { ...editingTodo, ...data });
-              } else {
-                handleCreate(data);
-              }
-            }}
-            onCancel={() => {
-              setIsFormOpen(false);
-              setEditingTodo(null);
-            }}
+      <div className="space-y-4">
+        {todos.map((todo) => (
+          <TodoItem
+            key={todo.id}
+            todo={todo}
+            onToggle={onToggle}
+            onDeleteClick={handleDeleteClick}
           />
-        </div>
-      )}
-
-      <div className="space-y-3">
-        {todos.length === 0 ? (
-          <p className="text-center text-gray-500 py-8">
-            No todos yet. Click "Add New Todo" to get started!
-          </p>
-        ) : (
-          todos.map((todo) => (
-            <TodoItem
-              key={todo.id}
-              todo={todo}
-              onToggle={() => handleToggleComplete(todo)}
-              onEdit={() => {
-                setEditingTodo(todo);
-                setIsFormOpen(true);
-              }}
-              onDelete={() => handleDeleteClick(todo)}
-            />
-          ))
-        )}
+        ))}
       </div>
-    </div>
+    </>
   );
 }

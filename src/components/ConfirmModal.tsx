@@ -19,21 +19,19 @@ export default function ConfirmModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* پس‌زمینه تیره */}
       <div
         className="absolute inset-0 bg-black bg-opacity-50"
         onClick={onCancel}
       />
       
-      {/* مودال */}
-      <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-        <h2 className="text-xl font-semibold mb-4">{title}</h2>
-        <p className="text-gray-600 mb-6">{message}</p>
+      <div className="relative bg-gray-900 rounded-lg shadow-xl max-w-md w-full mx-4 p-6 border border-purple-500/30">
+        <h2 className="text-xl font-semibold mb-4 text-white">{title}</h2>
+        <p className="text-gray-300 mb-6">{message}</p>
         
         <div className="flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition"
+            className="px-4 py-2 text-gray-300 bg-gray-800 rounded-md hover:bg-gray-700 transition border border-gray-700"
           >
             Cancel
           </button>
