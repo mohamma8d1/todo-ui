@@ -2,7 +2,8 @@ export interface TodoItemDto{
     id: string,
     title: string,
     description?: string,
-    isComplete: boolean
+    isComplete: boolean,
+    createdAt: string,
 }
 
 export interface CreateTodoCommand{
