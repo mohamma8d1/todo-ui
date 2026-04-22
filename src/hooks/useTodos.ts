@@ -16,11 +16,11 @@ export function useTodos() {
       setLoading(true);
       setError(null);
       const response = await fetch(API_URL);
-      
+
       if (!response.ok) {
         throw Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data: TodoResponse = await response.json();
       setTodos(data.items);
     } catch (err) {
@@ -58,7 +58,7 @@ export function useTodos() {
 
     try {
       const response = await fetch(`${API_URL}/${id}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
@@ -97,7 +97,13 @@ export function useTodos() {
     }
   };
 
+  const deleteTodoSilent = async (id: string) => {
+    const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+    if (!response.ok) throw Error(`Delete failed: ${response.status}`);
+  };
+
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTodos();
   }, [fetchTodos]);
 
@@ -108,6 +114,7 @@ export function useTodos() {
     addTodo,
     toggleTodo,
     deleteTodo,
+    deleteTodoSilent,
     refetch: fetchTodos,
   };
 }

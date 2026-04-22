@@ -10,7 +10,16 @@ import { useTodos } from "@/src/hooks/useTodos";
 type FilterType = "all" | "active" | "completed";
 
 export default function Home() {
-  const { todos, loading, error, addTodo, toggleTodo, deleteTodo, refetch } = useTodos();
+  const {
+    todos,
+    loading,
+    error,
+    addTodo,
+    toggleTodo,
+    deleteTodo,
+    deleteTodoSilent,
+    refetch,
+  } = useTodos();
   const [filter, setFilter] = useState<FilterType>("all");
 
   const filteredTodos = todos.filter((todo) => {
@@ -61,9 +70,10 @@ export default function Home() {
           <button
             onClick={async () => {
               const completed = todos.filter((t) => t.isComplete);
-              for (const todo of completed) {
-                await deleteTodo(todo.id);
-              }
+              await Promise.all(
+                completed.map((todo) => deleteTodoSilent(todo.id)),
+              );
+              await refetch();
             }}
             className="mt-8 mx-auto block px-6 py-2 glass-effect rounded-full text-red-400 
                        hover:text-red-300 hover:neon-border-cyan transition-all duration-300 border border-transparent"

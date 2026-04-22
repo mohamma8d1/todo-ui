@@ -1,7 +1,7 @@
 // components/Header.tsx
 "use client";
 
-import { Todo } from "@/types/todo";
+import { Todo } from "@/src/types/todo";
 
 interface HeaderProps {
   todos: Todo[];
@@ -14,8 +14,8 @@ export default function Header({ todos }: HeaderProps) {
   return (
     <header className="text-center mb-12">
       <h1 className="text-5xl md:text-6xl font-bold mb-4">
-        <span className="bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-          ✨ Galaxy Tasks
+        <span className="bg-gradient-to-r from-cyan-300 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+          ✨ Galaxy Tasks ✨
         </span>
       </h1>
       <p className="text-gray-400 text-lg mb-8">
